@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package pricing;
+
+message CalculatePricingRequest {
+  double restaurant_lat = 1;
+  double restaurant_lng = 2;
+  double delivery_lat   = 3;
+  double delivery_lng   = 4;
+}
+
+message CalculatePricingResponse {
+  double surge_multiplier       = 1;
+  int64  delivery_fee           = 2;   // paise
+  int32  estimated_delivery_mins = 3;
+}
+
+service PricingService {
+  rpc CalculatePricing (CalculatePricingRequest) returns (CalculatePricingResponse);
+}

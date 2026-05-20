@@ -1,0 +1,259 @@
+version: "3.9"
+
+services:
+  # ── PostgreSQL 16 with PostGIS ──────────────────────────────────────────────
+  postgres:
+    image: postgis/postgis:16-3.5
+    container_name: orderhub-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: orderhub
+      POSTGRES_USER: orderhub
+      POSTGRES_PASSWORD: orderhub_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orderhub"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis 7 ─────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: orderhub-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Kafka (KRaft mode — no Zookeeper) ───────────────────────────────────────
+  kafka:
+    image: bitnami/kafka:3.9
+    container_name: orderhub-kafka
+    restart: unless-stopped
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_CFG_NUM_PARTITIONS=3
+      - KAFKA_CFG_DEFAULT_REPLICATION_FACTOR=1
+      - KAFKA_CFG_LOG_RETENTION_HOURS=168
+    ports:
+      - "9094:9094"
+    volumes:
+      - kafka_data:/bitnami/kafka
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  # ── Kafka UI (dev only) ──────────────────────────────────────────────────────
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: orderhub-kafka-ui
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_CLUSTERS_0_NAME: orderhub
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    ports:
+      - "8080:8080"
+    profiles:
+      - dev-tools
+
+  # ── Gateway (NestJS · port 3001) ─────────────────────────────────────────────
+  gateway:
+    build:
+      context: ./apps/gateway
+      dockerfile: Dockerfile
+    container_name: orderhub-gateway
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://orderhub:orderhub_password@postgres:5432/orderhub
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JWT_EXPIRES_IN: 7d
+      ORDERS_SERVICE_URL: http://orders:3002
+      DRIVERS_SERVICE_URL: http://drivers:3003
+      NOTIFICATIONS_SERVICE_URL: http://notifications:3004
+      PRICING_SERVICE_URL: http://pricing:3005
+      RESTAURANTS_SERVICE_URL: http://restaurants:3007
+      GATEWAY_PORT: 3001
+      NODE_ENV: ${NODE_ENV:-production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # ── Orders service (NestJS · port 3002) ────────────────────────────────────
+  orders:
+    build:
+      context: ./apps/orders
+      dockerfile: Dockerfile
+    container_name: orderhub-orders
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      DATABASE_URL: postgresql://orderhub:orderhub_password@postgres:5432/orderhub
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:9092
+      ORDERS_PORT: 3002
+      NODE_ENV: ${NODE_ENV:-production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # ── Drivers service (NestJS + PostGIS · port 3003) ─────────────────────────
+  drivers:
+    build:
+      context: ./apps/drivers
+      dockerfile: Dockerfile
+    container_name: orderhub-drivers
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      DATABASE_URL: postgresql://orderhub:orderhub_password@postgres:5432/orderhub
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:9092
+      DRIVERS_PORT: 3003
+      NODE_ENV: ${NODE_ENV:-production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # ── Notifications service (NestJS + Socket.IO · port 3004) ─────────────────
+  notifications:
+    build:
+      context: ./apps/notifications
+      dockerfile: Dockerfile
+    container_name: orderhub-notifications
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    environment:
+      DATABASE_URL: postgresql://orderhub:orderhub_password@postgres:5432/orderhub
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:9092
+      NOTIFICATIONS_PORT: 3004
+      NODE_ENV: ${NODE_ENV:-production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # ── Pricing service (FastAPI Python · port 3005) ────────────────────────────
+  pricing:
+    build:
+      context: ./apps/pricing
+      dockerfile: Dockerfile
+    container_name: orderhub-pricing
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    environment:
+      REDIS_URL: redis://redis:6379
+      PRICING_PORT: 3005
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # ── Consumer web app (Next.js 15 · port 3000) ───────────────────────────────
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: orderhub-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_GATEWAY_URL: http://gateway:3001
+      NEXT_PUBLIC_WS_URL: http://notifications:3004
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me-in-production}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NODE_ENV: ${NODE_ENV:-production}
+    depends_on:
+      - gateway
+
+  # ── Restaurants service (NestJS · port 3007) ───────────────────────────────
+  restaurants:
+    build:
+      context: ./apps/restaurants
+      dockerfile: Dockerfile
+    container_name: orderhub-restaurants
+    restart: unless-stopped
+    ports:
+      - "3007:3007"
+    environment:
+      DATABASE_URL: postgresql://orderhub:orderhub_password@postgres:5432/orderhub
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:9092
+      RESTAURANTS_PORT: 3007
+      NODE_ENV: ${NODE_ENV:-production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # ── Driver PWA (Next.js 15 · port 3006) ─────────────────────────────────────
+  driver-app:
+    build:
+      context: ./apps/driver-app
+      dockerfile: Dockerfile
+    container_name: orderhub-driver-app
+    restart: unless-stopped
+    ports:
+      - "3006:3006"
+    environment:
+      NEXT_PUBLIC_DRIVER_GATEWAY_URL: http://gateway:3001
+      NEXT_PUBLIC_DRIVER_WS_URL: http://notifications:3004
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me-in-production}
+      NEXTAUTH_URL: ${DRIVER_APP_URL:-http://localhost:3006}
+      NODE_ENV: ${NODE_ENV:-production}
+    depends_on:
+      - gateway
+
+volumes:
+  postgres_data:
+  redis_data:
+  kafka_data:

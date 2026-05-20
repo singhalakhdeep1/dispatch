@@ -1,0 +1,23 @@
+{
+  "name": "orderhub",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "test": "turbo test",
+    "db:push": "pnpm --filter @orderhub/database db:push",
+    "db:generate": "pnpm --filter @orderhub/database db:generate",
+    "db:seed": "pnpm --filter @orderhub/database db:seed",
+    "infra:up": "docker-compose up -d postgres redis kafka",
+    "infra:down": "docker-compose down"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3",
+    "@types/node": "^22.15.18"
+  }
+}
