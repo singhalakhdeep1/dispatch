@@ -1,29 +1,10 @@
 # OrderHub — Food Delivery Platform
 
-> A production-grade **Swiggy / Zomato clone** built as a polyglot microservices monorepo.
-> Real-time GPS tracking, Kafka-choreographed order sagas, surge pricing, PostGIS geospatial driver matching, and PWA support for consumers, drivers, restaurant owners, and super admins.
+A production-grade food delivery platform built as a polyglot microservices monorepo. Features real-time GPS tracking, Kafka-choreographed order sagas, surge pricing, PostGIS geospatial driver matching, and PWA support for consumers, drivers, restaurant owners, and super admins.
 
 ---
 
-## Table of Contents
-
-1. [Project Overview](#1-project-overview)
-2. [Architecture](#2-architecture)
-3. [Tech Stack](#3-tech-stack)
-4. [Database Schema](#4-database-schema)
-5. [Kafka Topics & Event Flow](#5-kafka-topics--event-flow)
-6. [WebSocket Events](#6-websocket-events)
-7. [API Reference](#7-api-reference)
-8. [Frontend Applications](#8-frontend-applications)
-9. [Environment Variables](#9-environment-variables)
-10. [Quick Start](#10-quick-start)
-11. [Full Docker Deployment](#11-full-docker-deployment)
-12. [Key Design Decisions](#12-key-design-decisions)
-13. [Project Structure](#13-project-structure)
-
----
-
-## 1. Project Overview
+## Project Overview
 
 OrderHub is a full-featured food delivery platform with four distinct user personas:
 
@@ -38,7 +19,7 @@ The platform uses a **choreography-based Saga** pattern via Kafka for the distri
 
 ---
 
-## 2. Architecture
+## Architecture
 
 ```
 orderhub/
@@ -80,7 +61,7 @@ orderhub/
 
 ---
 
-## 3. Tech Stack
+## Tech Stack
 
 | Layer                | Technology                                                                    |
 | -------------------- | ----------------------------------------------------------------------------- |
@@ -101,7 +82,7 @@ orderhub/
 
 ---
 
-## 4. Database Schema
+## Database Schema
 
 19 Prisma models across the following domains:
 
@@ -153,7 +134,7 @@ orderhub/
 
 ---
 
-## 5. Kafka Topics & Event Flow
+## Kafka Topics & Event Flow
 
 ### Topics
 
@@ -206,7 +187,7 @@ All events use a typed envelope defined in `packages/shared`:
 
 ---
 
-## 6. WebSocket Events
+## WebSocket Events
 
 Connect to `ws://localhost:3004` (default namespace) with `?token=<jwt>`.
 
@@ -228,7 +209,7 @@ Connect to `ws://localhost:3004` (default namespace) with `?token=<jwt>`.
 
 ---
 
-## 7. API Reference
+## API Reference
 
 All external requests go through the **Gateway at `:3001`**. Internal service ports are not exposed in production.
 Swagger UI: `http://localhost:3001/api/docs`
@@ -321,7 +302,7 @@ Swagger UI: `http://localhost:3001/api/docs`
 
 ---
 
-## 8. Frontend Applications
+## Frontend Applications
 
 ### Consumer Web (`apps/web` — port 3000)
 
@@ -373,7 +354,7 @@ Built with **Next.js 15 App Router**, TailwindCSS, Zustand, TanStack Query v5, R
 
 ---
 
-## 9. Environment Variables
+## Environment Variables
 
 Copy `.env.example` to `.env` in the project root. Key variables:
 
@@ -405,7 +386,7 @@ See [.env.example](.env.example) for the complete list.
 
 ---
 
-## 10. Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -463,7 +444,7 @@ docker compose --profile dev-tools up kafka-ui -d
 
 ---
 
-## 11. Full Docker Deployment
+## Full Docker Deployment
 
 ```bash
 # 1. Copy and fill environment file
@@ -481,7 +462,7 @@ All services, databases, and the message broker start together. The `depends_on`
 
 ---
 
-## 12. Key Design Decisions
+## Key Design Decisions
 
 ### Money as integers
 
@@ -537,7 +518,7 @@ The Python service counts active orders per geohash zone using Redis `INCR`/`EXP
 
 ---
 
-## 13. Project Structure
+## Project Structure
 
 ```
 orderhub/
@@ -599,3 +580,9 @@ orderhub/
 ├── pnpm-workspace.yaml
 └── .env.example
 ```
+
+---
+
+## 📝 License
+
+Proprietary - All rights reserved.
