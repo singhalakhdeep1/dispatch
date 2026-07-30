@@ -12,6 +12,7 @@ import { firstValueFrom } from "rxjs";
 import { PrismaClient, OrderStatus } from "@orderhub/database";
 import { PRISMA_TOKEN } from "../database/database.module";
 import { KafkaService } from "../kafka/kafka.service";
+import { LoyaltyService } from "../loyalty/loyalty.service";
 import {
     PlaceOrderDto,
     CancelOrderDto,
@@ -35,6 +36,7 @@ export class OrdersService {
         private readonly kafka: KafkaService,
         private readonly http: HttpService,
         private readonly config: ConfigService,
+        private readonly loyaltyService: LoyaltyService,
     ) {}
 
     async place(dto: PlaceOrderDto, user: JwtPayload) {
