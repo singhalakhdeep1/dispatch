@@ -19,21 +19,135 @@ export class ReviewsService {
 
     // ─── List reviews for restaurant ──────────────────────────────────────────
 
-    async findForRestaurant(restaurantId: string, page = 1, pageSize = 20) {
+    async findForRestaurant(restaurantId: string, page = 1, pageSize = 20, sortBy?: string, rating?: number) {
+        const skip = (page - 1) * pageSize;
+        
+        // Build where clause
+        const where: any = { restaurantId, targetType: ReviewTarget.RESTAURANT };
+        if (rating) {
+            where.rating = rating;
+        }
+
+        // Determine sort order
+        let orderBy: any = { createdAt: "desc" };
+        if (sortBy === "helpful") {
+            orderBy = { helpfulCount: "desc" };
+        } else if (sortBy === "rating_high") {
+            orderBy = { rating: "desc" };
+        } else if (sortBy === "rating_low") {
+            orderBy = { rating: "asc" };
+        }
+
+        const [reviews, total] = await Promise.all([
+            this.prisma.review.findMany({
+                where,
+                skip,
+                take: pageSize,
+                orderBy,
+                include: {
+                    user: { select: { id: true, fullName: true, avatarUrl: true } },
+                    helpfulVotes: { select: { userId: true } },
+                },
+            }),
+            this.prisma.review.count({ where }),
+        ]);
+        
+        return { 
+            data: reviews.map(r => ({
+                ...r,
+                user: r.user,
+                isHelpful: r.helpfulVotes.some(v => v.userId === r.userId),
+                helpfulVotes: undefined
+            })), 
+            total, 
+            page, 
+            pageSize, 
+            totalPages: Math.ceil(total / pageSize) 
+        };
+    }
+
+    // ─── List reviews for menu item ─────────────────────────────────────────────
+
+    async findForMenuItem(menuItemId: string, page = 1, pageSize = 10) {
         const skip = (page - 1) * pageSize;
         const [reviews, total] = await Promise.all([
             this.prisma.review.findMany({
-                where: { restaurantId, targetType: ReviewTarget.RESTAURANT },
+                where: { menuItemId, targetType: ReviewTarget.MENU_ITEM },
                 skip,
                 take: pageSize,
                 orderBy: { createdAt: "desc" },
                 include: {
-                    user: { select: { id: true, name: true, avatar: true } },
+                    user: { select: { id: true, fullName: true, avatarUrl: true } },
                 },
             }),
-            this.prisma.review.count({ where: { restaurantId, targetType: ReviewTarget.RESTAURANT } }),
+            this.prisma.review.count({ where: { menuItemId, targetType: ReviewTarget.MENU_ITEM } }),
         ]);
         return { data: reviews, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+    }
+
+    // ─── List reviews for driver ────────────────────────────────────────────────
+
+    async findForDriver(driverId: string, page = 1, pageSize = 10) {
+        const skip = (page - 1) * pageSize;
+        const [reviews, total] = await Promise.all([
+            this.prisma.review.findMany({
+                where: { driverId, targetType: ReviewTarget.DRIVER },
+                skip,
+                take: pageSize,
+                orderBy: { createdAt: "desc" },
+                include: {
+                    user: { select: { id: true, fullName: true, avatarUrl: true } },
+                },
+            }),
+            this.prisma.review.count({ where: { driverId, targetType: ReviewTarget.DRIVER } }),
+        ]);
+        return { data: reviews, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+    }
+
+    // ─── List user's reviews ─────────────────────────────────────────────────────
+
+    async findUserReviews(userId: string, page = 1, pageSize = 20) {
+        const skip = (page - 1) * pageSize;
+        const [reviews, total] = await Promise.all([
+            this.prisma.review.findMany({
+                where: { userId },
+                skip,
+                take: pageSize,
+                orderBy: { createdAt: "desc" },
+                include: {
+                    restaurant: { select: { id: true, name: true, imageUrl: true } },
+                    menuItem: { select: { id: true, name: true, imageUrl: true } },
+                    driver: { select: { id: true, user: { select: { fullName: true } } } },
+                },
+            }),
+            this.prisma.review.count({ where: { userId } }),
+        ]);
+        return { data: reviews, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+    }
+
+    // ─── Get single review ───────────────────────────────────────────────────────
+
+    async findOne(reviewId: string) {
+        const review = await this.prisma.review.findUnique({
+            where: { id: reviewId },
+            include: {
+                user: { select: { id: true, fullName: true, avatarUrl: true } },
+                restaurant: { select: { id: true, name: true, imageUrl: true } },
+                menuItem: { select: { id: true, name: true, imageUrl: true } },
+                driver: { select: { id: true, user: { select: { fullName: true } } } },
+                helpfulVotes: { select: { userId: true } },
+            },
+        });
+        
+        if (!review) {
+            throw new NotFoundException("Review not found");
+        }
+
+        return {
+            ...review,
+            isHelpful: review.helpfulVotes.some(v => v.userId === review.userId),
+            helpfulVotes: undefined
+        };
     }
 
     // ─── Create review (post-delivery only) ───────────────────────────────────
@@ -84,8 +198,120 @@ export class ReviewsService {
         if (review.restaurant?.ownerId !== ownerId) throw new ForbiddenException("Not your restaurant");
         return this.prisma.review.update({
             where: { id: reviewId },
-            data: { ownerReply: reply },
+            data: { ownerReply: reply, ownerReplyAt: new Date() },
         });
+    }
+
+    // ─── Mark review as helpful ───────────────────────────────────────────────────
+
+    async markHelpful(reviewId: string, userId: string) {
+        const review = await this.prisma.review.findUnique({ where: { id: reviewId } });
+        if (!review) throw new NotFoundException("Review not found");
+
+        // Check if already voted
+        const existing = await this.prisma.reviewHelpfulVote.findUnique({
+            where: { reviewId_userId: { reviewId, userId } },
+        });
+        if (existing) throw new BadRequestException("Already marked as helpful");
+
+        await this.prisma.reviewHelpfulVote.create({
+            data: { reviewId, userId },
+        });
+
+        return this.prisma.review.update({
+            where: { id: reviewId },
+            data: { helpfulCount: { increment: 1 } },
+        });
+    }
+
+    // ─── Remove helpful vote ─────────────────────────────────────────────────────
+
+    async removeHelpful(reviewId: string, userId: string) {
+        const existing = await this.prisma.reviewHelpfulVote.findUnique({
+            where: { reviewId_userId: { reviewId, userId } },
+        });
+        if (!existing) throw new NotFoundException("Vote not found");
+
+        await this.prisma.reviewHelpfulVote.delete({
+            where: { id: existing.id },
+        });
+
+        return this.prisma.review.update({
+            where: { id: reviewId },
+            data: { helpfulCount: { decrement: 1 } },
+        });
+    }
+
+    // ─── Flag review for moderation ─────────────────────────────────────────────
+
+    async flagReview(reviewId: string, userId: string) {
+        const review = await this.prisma.review.findUnique({ where: { id: reviewId } });
+        if (!review) throw new NotFoundException("Review not found");
+
+        return this.prisma.review.update({
+            where: { id: reviewId },
+            data: { isFlagged: true },
+        });
+    }
+
+    // ─── Update review ───────────────────────────────────────────────────────────
+
+    async updateReview(reviewId: string, userId: string, dto: { rating?: number; comment?: string; images?: string[] }) {
+        const review = await this.prisma.review.findUnique({ where: { id: reviewId } });
+        if (!review) throw new NotFoundException("Review not found");
+        if (review.userId !== userId) throw new ForbiddenException("Not your review");
+
+        // Allow update only within 24 hours
+        const hoursSinceCreation = (Date.now() - review.createdAt.getTime()) / (1000 * 60 * 60);
+        if (hoursSinceCreation > 24) {
+            throw new BadRequestException("Can only edit reviews within 24 hours");
+        }
+
+        const updated = await this.prisma.review.update({
+            where: { id: reviewId },
+            data: {
+                ...dto,
+                updatedAt: new Date(),
+            },
+        });
+
+        // Update average rating if rating changed
+        if (dto.rating !== undefined) {
+            await this.updateAverageRating({
+                targetType: review.targetType,
+                restaurantId: review.restaurantId || undefined,
+                driverId: review.driverId || undefined,
+                menuItemId: review.menuItemId || undefined,
+            });
+        }
+
+        return updated;
+    }
+
+    // ─── Delete review ───────────────────────────────────────────────────────────
+
+    async deleteReview(reviewId: string, userId: string) {
+        const review = await this.prisma.review.findUnique({ where: { id: reviewId } });
+        if (!review) throw new NotFoundException("Review not found");
+        if (review.userId !== userId) throw new ForbiddenException("Not your review");
+
+        // Allow deletion only within 48 hours
+        const hoursSinceCreation = (Date.now() - review.createdAt.getTime()) / (1000 * 60 * 60);
+        if (hoursSinceCreation > 48) {
+            throw new BadRequestException("Can only delete reviews within 48 hours");
+        }
+
+        await this.prisma.review.delete({ where: { id: reviewId } });
+
+        // Update average rating
+        await this.updateAverageRating({
+            targetType: review.targetType,
+            restaurantId: review.restaurantId || undefined,
+            driverId: review.driverId || undefined,
+            menuItemId: review.menuItemId || undefined,
+        });
+
+        return { success: true };
     }
 
     // ─── Private helpers ──────────────────────────────────────────────────────
