@@ -1,0 +1,47 @@
+# Kubernetes deployment for dispatch
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dispatch-api
+  namespace: dispatch
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dispatch-api
+  template:
+    metadata:
+      labels:
+        app: dispatch-api
+    spec:
+      containers:
+      - name: dispatch-api
+        image: dispatch-api:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: REDIS_URL
+          value: "redis://redis-service:6379"
+        - name: RABBITMQ_URL
+          value: "amqp://rabbitmq-service:5672"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dispatch-api-service
+  namespace: dispatch
+spec:
+  selector:
+    app: dispatch-api
+  ports:
+  - port: 80
+    targetPort: 3000
+  type: LoadBalancer

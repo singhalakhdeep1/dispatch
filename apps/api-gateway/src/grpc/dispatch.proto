@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package dispatch;
+
+// Order service
+service Order {
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+  rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);
+  rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (UpdateOrderStatusResponse);
+}
+
+message CreateOrderRequest {
+  string customerId = 1;
+  string restaurantId = 2;
+  repeated OrderItem items = 3;
+}
+
+message OrderItem {
+  string itemId = 1;
+  int32 quantity = 2;
+}
+
+message CreateOrderResponse {
+  string orderId = 1;
+  string status = 2;
+  string createdAt = 3;
+}
+
+message GetOrderRequest {
+  string orderId = 1;
+}
+
+message GetOrderResponse {
+  string orderId = 1;
+  string customerId = 2;
+  string restaurantId = 3;
+  string driverId = 4;
+  string status = 5;
+  double total = 6;
+  string createdAt = 7;
+}
+
+message UpdateOrderStatusRequest {
+  string orderId = 1;
+  string status = 2;
+}
+
+message UpdateOrderStatusResponse {
+  string orderId = 1;
+  string status = 2;
+  string updatedAt = 3;
+}
+
+// Driver service
+service Driver {
+  rpc GetDriver(GetDriverRequest) returns (GetDriverResponse);
+  rpc UpdateDriverLocation(UpdateDriverLocationRequest) returns (UpdateDriverLocationResponse);
+  rpc GetAvailableDrivers(GetAvailableDriversRequest) returns (GetAvailableDriversResponse);
+}
+
+message GetDriverRequest {
+  string driverId = 1;
+}
+
+message GetDriverResponse {
+  string driverId = 1;
+  string name = 2;
+  string email = 3;
+  string phone = 4;
+  string vehicleType = 5;
+  string status = 6;
+  double rating = 7;
+}
+
+message UpdateDriverLocationRequest {
+  string driverId = 1;
+  double lat = 2;
+  double lng = 3;
+}
+
+message UpdateDriverLocationResponse {
+  string driverId = 1;
+  double lat = 2;
+  double lng = 3;
+  string updatedAt = 4;
+}
+
+message GetAvailableDriversRequest {
+  double lat = 1;
+  double lng = 2;
+  double radius = 3;
+}
+
+message GetAvailableDriversResponse {
+  repeated DriverInfo drivers = 1;
+}
+
+message DriverInfo {
+  string driverId = 1;
+  string name = 2;
+  double lat = 3;
+  double lng = 4;
+  double rating = 5;
+}

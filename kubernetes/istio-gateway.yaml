@@ -1,0 +1,56 @@
+# Istio Gateway for dispatch
+
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: dispatch-gateway
+  namespace: dispatch
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "dispatch.example.com"
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: dispatch-vs
+  namespace: dispatch
+spec:
+  hosts:
+  - "dispatch.example.com"
+  gateways:
+  - dispatch-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /api
+    route:
+    - destination:
+        host: dispatch-api-service
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /graphql
+    route:
+    - destination:
+        host: dispatch-api-service
+        port:
+          number: 80
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: dispatch-dr
+  namespace: dispatch
+spec:
+  host: dispatch-api-service
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN

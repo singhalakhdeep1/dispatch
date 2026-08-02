@@ -1,0 +1,80 @@
+# GraphQL schema for dispatch
+
+type Order {
+  id: ID!
+  customerId: ID!
+  restaurantId: ID!
+  driverId: ID
+  status: String!
+  items: [OrderItem!]!
+  total: Float!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type OrderItem {
+  id: ID!
+  orderId: ID!
+  itemId: ID!
+  name: String!
+  quantity: Int!
+  price: Float!
+}
+
+type Driver {
+  id: ID!
+  name: String!
+  email: String!
+  phone: String!
+  vehicleType: String!
+  status: String!
+  currentLocation: Location
+  rating: Float!
+}
+
+type Location {
+  lat: Float!
+  lng: Float!
+}
+
+type Restaurant {
+  id: ID!
+  name: String!
+  address: String!
+  location: Location!
+  rating: Float!
+  isOpen: Boolean!
+}
+
+type Query {
+  getOrder(id: ID!): Order
+  getOrders(customerId: ID!, status: String): [Order!]!
+  getDriver(id: ID!): Driver
+  getAvailableDrivers(location: Location!): [Driver!]!
+  getRestaurant(id: ID!): Restaurant
+  getNearbyRestaurants(location: Location!, radius: Float!): [Restaurant!]!
+}
+
+type Mutation {
+  createOrder(input: CreateOrderInput!): Order!
+  updateOrderStatus(orderId: ID!, status: String!): Order!
+  assignDriver(orderId: ID!, driverId: ID!): Order!
+  updateDriverLocation(driverId: ID!, location: Location!): Driver!
+}
+
+input CreateOrderInput {
+  customerId: ID!
+  restaurantId: ID!
+  items: [OrderItemInput!]!
+  deliveryAddress: LocationInput!
+}
+
+input OrderItemInput {
+  itemId: ID!
+  quantity: Int!
+}
+
+input LocationInput {
+  lat: Float!
+  lng: Float!
+}
