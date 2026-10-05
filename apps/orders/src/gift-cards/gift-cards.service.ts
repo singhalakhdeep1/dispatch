@@ -6,6 +6,7 @@ import {
     BadRequestException,
     Logger,
 } from "@nestjs/common";
+import { randomInt } from "crypto";
 import { PrismaClient } from "@orderhub/database";
 import { PRISMA_TOKEN } from "../database/database.module";
 
@@ -265,7 +266,7 @@ export class GiftCardsService {
         let code = "";
         for (let i = 0; i < 12; i++) {
             if (i > 0 && i % 4 === 0) code += "-";
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
+            code += chars.charAt(randomInt(chars.length));
         }
         return code;
     }
