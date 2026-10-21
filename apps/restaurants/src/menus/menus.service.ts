@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException, ForbiddenException, Logger } from "@nestjs/common";
+﻿import { Injectable, Inject, NotFoundException, ForbiddenException, Logger } from "@nestjs/common";
 import { PrismaClient } from "@orderhub/database";
 import { Redis } from "ioredis";
 import { PRISMA_TOKEN } from "../database/database.module";
@@ -35,7 +35,7 @@ export class MenusService {
                 reviews: {
                     take: 5,
                     orderBy: { createdAt: "desc" },
-                    include: { user: { select: { id: true, name: true, avatar: true } } },
+                    include: { user: { select: { id: true, fullName: true } } },
                 },
             },
         });

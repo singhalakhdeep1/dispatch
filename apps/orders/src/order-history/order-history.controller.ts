@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Headers, Query, DefaultValuePipe, ParseIntPipe } from "@nestjs/common";
+﻿import { Controller, Get, Post, Param, Headers, Query, DefaultValuePipe, ParseIntPipe } from "@nestjs/common";
 import { OrderHistoryService } from "./order-history.service";
 
 @Controller("v1/order-history")

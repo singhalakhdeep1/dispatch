@@ -1,7 +1,7 @@
 import { auth } from "./auth";
 import { NextResponse } from "next/server";
 
-export default auth((req) => {
+export default (auth as any)((req: any) => {
     const isLoggedIn = !!req.auth;
     const isProtected = req.nextUrl.pathname.startsWith("/dashboard") ||
         req.nextUrl.pathname.startsWith("/order") ||

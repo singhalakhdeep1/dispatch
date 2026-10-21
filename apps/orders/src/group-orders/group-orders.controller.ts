@@ -25,7 +25,7 @@ export class GroupOrdersController {
     @Get("my-groups")
     getMyGroupOrders(
         @Headers("x-user-id") userId: string,
-        @Query("status") status?: string,
+        @Query("status") status: string | undefined,
         @Query("page", new DefaultValuePipe(1), ParseIntPipe) page: number,
         @Query("pageSize", new DefaultValuePipe(20), ParseIntPipe) pageSize: number,
     ) {

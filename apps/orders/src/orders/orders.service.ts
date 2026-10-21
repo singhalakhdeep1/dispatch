@@ -140,6 +140,7 @@ export class OrdersService {
             deliveryLng: dto.deliveryLng,
             totalAmount: order.totalAmount,
             itemCount: orderItems.length,
+            paymentMethod: (dto as any).paymentMethod ?? 'RAZORPAY',
         });
 
         this.logger.log(`Order ${order.id} placed by ${user.email}`);

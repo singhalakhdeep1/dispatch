@@ -42,8 +42,8 @@ export class DriversService {
         await this.kafka.emit<DriverStatusChangedPayload>(KAFKA_TOPICS.DRIVER_STATUS_CHANGED, {
             driverId: driver.id,
             userId,
-            status: status as any,
-            changedAt: new Date().toISOString(),
+            previousStatus: driver.status as string,
+            newStatus: status as string,
         });
 
         return { driverId: driver.id, status };
@@ -112,14 +112,19 @@ export class DriversService {
             data: { status: DriverStatus.ON_TRIP },
         });
 
-        const payload: DriverAssignedPayload = {
+        await this.kafka.emit(KAFKA_TOPICS.DRIVER_ASSIGNED, {
             orderId,
             driverId,
             userId,
-            assignedAt: new Date().toISOString(),
-        };
-
-        await this.kafka.emit(KAFKA_TOPICS.DRIVER_ASSIGNED, payload);
+            restaurantOwnerId: '',
+            driverName: '',
+            vehicleType: '',
+            vehicleNumber: '',
+            estimatedPickupMins: 10,
+            estimatedDeliveryMins: 30,
+            driverLat: 0,
+            driverLng: 0,
+        } satisfies DriverAssignedPayload);
         this.logger.log(`Driver ${driverId} assigned to order ${orderId}`);
     }
 
@@ -182,11 +187,13 @@ export class DriversService {
         `;
 
         return results.map((r) => ({
-            driverId: r.id,
-            lat: r.lat,
-            lng: r.lng,
+            id: r.id,
+            userId: '',
             vehicleType: r.vehicleType as any,
-            distanceKm: r.dist_m / 1000,
+            rating: 0,
+            distanceMeters: r.dist_m,
+            lastLat: r.lat,
+            lastLng: r.lng,
         }));
     }
 }

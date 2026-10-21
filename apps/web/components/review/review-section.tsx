@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Star, ThumbsUp, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -69,7 +69,7 @@ export function ReviewSection({ restaurantId }: Props) {
                         <Textarea
                             placeholder="Share your experience..."
                             value={comment}
-                            onChange={(e) => setComment(e.target.value)}
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setComment(e.target.value)}
                             rows={3}
                             className="resize-none"
                         />

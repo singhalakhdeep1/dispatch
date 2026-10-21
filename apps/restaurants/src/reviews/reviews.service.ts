@@ -1,4 +1,4 @@
-import {
+﻿import {
     Injectable,
     Inject,
     NotFoundException,
@@ -178,7 +178,7 @@ export class ReviewsService {
 
         const review = await this.prisma.review.create({
             data: { ...dto, userId },
-            include: { user: { select: { id: true, name: true, avatar: true } } },
+            include: { user: { select: { id: true, fullName: true } } },
         });
 
         // Update restaurant/driver/item average rating

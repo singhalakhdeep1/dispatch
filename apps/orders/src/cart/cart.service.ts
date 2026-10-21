@@ -37,8 +37,8 @@ export class CartService {
         if (!cart) return null;
 
         const items: CartItemView[] = cart.items
-            .filter((ci) => ci.menuItem.isAvailable)
-            .map((ci) => {
+            .filter((ci: any) => ci.menuItem.isAvailable)
+            .map((ci: any) => {
                 const effectivePrice = ci.menuItem.discountedPrice ?? ci.menuItem.price;
                 return {
                     id: ci.id,

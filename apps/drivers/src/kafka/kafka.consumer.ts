@@ -13,7 +13,7 @@ import {
 @Injectable()
 export class OrderConsumer implements OnModuleInit, OnModuleDestroy {
     private readonly logger = new Logger(OrderConsumer.name);
-    private consumer = this.kafka.createConsumer("drivers-order-listener");
+    private consumer!: ReturnType<KafkaService["createConsumer"]>;
 
     constructor(
         @Inject(PRISMA_TOKEN) private readonly prisma: PrismaClient,
@@ -23,6 +23,7 @@ export class OrderConsumer implements OnModuleInit, OnModuleDestroy {
     ) {}
 
     async onModuleInit() {
+        this.consumer = this.kafka.createConsumer("drivers-order-listener");
         await this.consumer.connect();
         await this.consumer.subscribe({
             topics: [KAFKA_TOPICS.ORDER_PLACED, KAFKA_TOPICS.ORDER_FINDING_DRIVER],

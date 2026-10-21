@@ -18,7 +18,7 @@ import { NotificationType } from "@orderhub/database";
 @Injectable()
 export class KafkaConsumer implements OnModuleInit, OnModuleDestroy {
     private readonly logger = new Logger(KafkaConsumer.name);
-    private consumer = this.kafka.createConsumer("notifications");
+    private consumer!: ReturnType<KafkaService["createConsumer"]>;
 
     constructor(
         private readonly kafka: KafkaService,
@@ -27,6 +27,7 @@ export class KafkaConsumer implements OnModuleInit, OnModuleDestroy {
     ) {}
 
     async onModuleInit() {
+        this.consumer = this.kafka.createConsumer("notifications");
         await this.consumer.connect();
 
         await this.consumer.subscribe({
@@ -145,8 +146,8 @@ export class KafkaConsumer implements OnModuleInit, OnModuleDestroy {
                 // Broadcast driver position to all tracking that order
                 this.gateway.emitToOrder(d.orderId ?? "", "driver:location", {
                     driverId: d.driverId,
-                    lat: d.lat,
-                    lng: d.lng,
+                    lat: d.latitude,
+                    lng: d.longitude,
                     heading: d.heading,
                     timestamp: event.timestamp,
                 });

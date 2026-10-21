@@ -33,8 +33,8 @@ export class LocationService implements OnModuleInit, OnModuleDestroy {
         await this.prisma.driverLocation.create({
             data: {
                 driverId,
-                latitude: dto.lat,
-                longitude: dto.lng,
+                latitude: dto.latitude,
+                longitude: dto.longitude,
                 heading: dto.heading,
                 speed: dto.speed,
             },
@@ -44,14 +44,14 @@ export class LocationService implements OnModuleInit, OnModuleDestroy {
         await this.prisma.driver.update({
             where: { id: driverId },
             data: {
-                lastLat: dto.lat,
-                lastLng: dto.lng,
+                lastLat: dto.latitude,
+                lastLng: dto.longitude,
                 lastSeenAt: new Date(),
             },
         });
 
         // Redis GEOADD for fast geo queries
-        await this.redis.geoadd(REDIS_GEO_KEY, dto.lng, dto.lat, driverId);
+        await this.redis.geoadd(REDIS_GEO_KEY, dto.longitude, dto.latitude, driverId);
     }
 
     async getNearbyDriverIds(lat: number, lng: number, radiusKm: number): Promise<string[]> {

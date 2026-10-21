@@ -12,7 +12,7 @@ export class LoyaltyController {
 
     @Get("rewards")
     getAvailableRewards(
-        @Query("programId") programId?: string,
+        @Query("programId") programId: string | undefined,
         @Query("page", new DefaultValuePipe(1), ParseIntPipe) page: number,
         @Query("pageSize", new DefaultValuePipe(20), ParseIntPipe) pageSize: number,
     ) {

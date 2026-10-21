@@ -5,7 +5,7 @@ import {
     Inject,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { PrismaClient, MemberRole } from "@orderhub/database";
+import { PrismaClient } from "@orderhub/database";
 import { PRISMA_TOKEN } from "../database/database.module";
 import { RegisterDto, LoginDto, RegisterDriverDto, UserRole } from "@orderhub/shared";
 import * as bcrypt from "bcryptjs";
@@ -43,7 +43,7 @@ export class AuthService {
 
         const passwordHash = await bcrypt.hash(dto.password, 12);
 
-        const result = await this.prisma.$transaction(async (tx) => {
+        const result = await this.prisma.$transaction(async (tx: any) => {
             const user = await tx.user.create({
                 data: {
                     email: dto.email,

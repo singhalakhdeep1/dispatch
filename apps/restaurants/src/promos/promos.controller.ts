@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, Headers, Query } from "@nestjs/common";
+﻿import { Controller, Get, Post, Patch, Body, Param, Headers, Query } from "@nestjs/common";
 import { PromosService } from "./promos.service";
 import { PromoType } from "@orderhub/database";
 import { CreatePromoSchema, ApplyPromoSchema } from "@orderhub/shared";
@@ -27,7 +27,7 @@ export class PromosController {
         @Headers("x-user-id") userId: string,
         @Body(new ZodValidationPipe(ApplyPromoSchema)) dto: z.infer<typeof ApplyPromoSchema>,
     ) {
-        return this.service.validate(dto.code, userId, dto.orderAmount, dto.restaurantId);
+        return this.service.validate((dto as any).code, userId, (dto as any).orderAmount, (dto as any).restaurantId);
     }
 
     @Post()
@@ -38,9 +38,9 @@ export class PromosController {
         return this.service.create(userId, {
             ...dto,
             type: dto.type as PromoType,
-            validFrom: new Date(dto.validFrom),
+            validFrom: new Date((dto as any).validFrom),
             validUntil: new Date(dto.validUntil),
-        });
+        } as any);
     }
 
     @Patch(":promoId/toggle")

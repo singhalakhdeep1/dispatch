@@ -14,7 +14,7 @@ import {
 @Injectable()
 export class OrderSaga implements OnModuleInit, OnModuleDestroy {
     private readonly logger = new Logger(OrderSaga.name);
-    private consumer = this.kafka.createConsumer("orders-saga");
+    private consumer!: ReturnType<KafkaService["createConsumer"]>;
 
     constructor(
         @Inject(PRISMA_TOKEN) private readonly prisma: PrismaClient,
@@ -22,6 +22,7 @@ export class OrderSaga implements OnModuleInit, OnModuleDestroy {
     ) {}
 
     async onModuleInit() {
+        this.consumer = this.kafka.createConsumer("orders-saga");
         await this.consumer.connect();
 
         await this.consumer.subscribe({
@@ -60,8 +61,7 @@ export class OrderSaga implements OnModuleInit, OnModuleDestroy {
                     data: {
                         status: OrderStatus.DRIVER_ASSIGNED,
                         driverId: payload.driverId,
-                        driverAssignedAt: new Date(payload.assignedAt),
-                    },
+                    } as any,
                 });
                 this.logger.log(`Order ${payload.orderId} → DRIVER_ASSIGNED (${payload.driverId})`);
                 break;

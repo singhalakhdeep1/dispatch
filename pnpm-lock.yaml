@@ -455,6 +455,9 @@ importers:
       axios:
         specifier: ^1.9.0
         version: 1.16.1
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
       leaflet:
         specifier: ^1.9.4
         version: 1.9.4
@@ -479,6 +482,9 @@ importers:
       socket.io-client:
         specifier: ^4.8.1
         version: 4.8.3
+      tailwind-merge:
+        specifier: ^2.6.0
+        version: 2.6.1
       zustand:
         specifier: ^5.0.4
         version: 5.0.13(@types/react@19.2.14)(react@19.2.6)

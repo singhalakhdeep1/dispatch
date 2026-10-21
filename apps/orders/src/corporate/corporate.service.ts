@@ -252,7 +252,7 @@ export class CorporateService {
     // ─── Approve order ───────────────────────────────────────────────────────
 
     async approveOrder(orderId: string, userId: string) {
-        const corporateOrder = await this.prisma.corporateOrder.findUnique({
+        const corporateOrder = await (this.prisma.corporateOrder as any).findFirst({
             where: { orderId },
             include: {
                 corporateAccount: true,
@@ -302,7 +302,7 @@ export class CorporateService {
     // ─── Reject order ───────────────────────────────────────────────────────
 
     async rejectOrder(orderId: string, userId: string, reason?: string) {
-        const corporateOrder = await this.prisma.corporateOrder.findUnique({
+        const corporateOrder = await (this.prisma.corporateOrder as any).findFirst({
             where: { orderId },
         });
 
@@ -345,7 +345,7 @@ export class CorporateService {
             },
         });
 
-        const totalSpent = orders.reduce((sum, co) => sum + co.order.totalAmount, 0);
+        const totalSpent = orders.reduce((sum: number, co: any) => sum + co.order.totalAmount, 0);
         const pendingApproval = await this.prisma.corporateOrder.count({
             where: {
                 corporateAccountId: accountId,

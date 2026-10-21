@@ -7,13 +7,6 @@
     --color-primary: 249 115 22; /* orange-500 */
     --color-primary-dark: 234 88 12; /* orange-600 */
   }
-
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
 }
 
 /* Leaflet map fix */

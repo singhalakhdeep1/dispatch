@@ -82,7 +82,7 @@ export class OrdersGrpcController {
         user_role: string;
     }) {
         const user: JwtPayload = { sub: data.user_id, role: data.user_role as UserRole, email: "" };
-        const order = await this.ordersService.updateStatus(data.order_id, { status: data.status as any }, user);
+        const order = await this.ordersService.updateStatus(data.order_id, data.status as any, user);
 
         return {
             id: order.id,

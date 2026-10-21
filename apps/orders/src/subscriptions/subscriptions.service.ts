@@ -298,7 +298,7 @@ export class SubscriptionsService {
                 // For now, we'll just extend the subscription
 
                 const newEndDate = new Date(subscription.endDate);
-                const newBillingDate = new Date(subscription.nextBillingDate);
+                const newBillingDate = new Date((subscription as any).nextBillingDate);
 
                 if (subscription.planType === "MONTHLY") {
                     newEndDate.setMonth(newEndDate.getMonth() + 1);

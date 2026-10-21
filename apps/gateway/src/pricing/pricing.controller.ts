@@ -5,6 +5,7 @@ import {
     Query,
     Body,
     SetMetadata,
+    Req,
 } from "@nestjs/common";
 import { ApiTags, ApiOperation } from "@nestjs/swagger";
 import { ProxyService } from "../proxy/proxy.service";
@@ -18,14 +19,14 @@ export class PricingController {
     @Post("calculate")
     @SetMetadata(IS_PUBLIC_KEY, true)
     @ApiOperation({ summary: "Calculate delivery price + surge" })
-    calculate(@Body() body: unknown, @Request() req: any) {
+    calculate(@Body() body: unknown, @Req() req: any) {
         return this.proxy.forward("pricing", "/pricing/calculate", "POST", body, req as any);
     }
 
     @Get("surge")
     @SetMetadata(IS_PUBLIC_KEY, true)
     @ApiOperation({ summary: "Get current surge multiplier for a zone" })
-    surge(@Query() query: any, @Request() req: any) {
+    surge(@Query() query: any, @Req() req: any) {
         return this.proxy.forward("pricing", "/pricing/surge", "GET", null, req as any);
     }
 }

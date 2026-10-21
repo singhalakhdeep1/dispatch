@@ -355,7 +355,7 @@ export class MultiRestaurantService {
 
         for (const restaurantCart of cart.multiRestaurantCarts) {
             const itemsTotal = restaurantCart.subtotal;
-            const deliveryFee = restaurantCart.restaurant.deliveryFee || 4900;
+            const deliveryFee = (restaurantCart.restaurant as any).deliveryFee || 4900;
             const platformFee = 499;
             const taxes = Math.floor(itemsTotal * restaurantCart.restaurant.taxPercent / 100);
             const totalAmount = itemsTotal + deliveryFee + platformFee + taxes;
@@ -366,7 +366,7 @@ export class MultiRestaurantService {
                     restaurantId: restaurantCart.restaurantId,
                     addressId: dto.addressId,
                     status: "PLACED",
-                    paymentMethod: "ONLINE",
+                    paymentMethod: "ONLINE" as any,
                     itemsTotal,
                     deliveryFee,
                     platformFee,
@@ -379,7 +379,7 @@ export class MultiRestaurantService {
                     isGroupOrder: false,
                     isMultiRestaurant: true,
                     isRated: false,
-                },
+                } as any,
             });
 
             // Create order items
@@ -390,8 +390,8 @@ export class MultiRestaurantService {
                         menuItemId: cartItem.menuItemId,
                         quantity: cartItem.quantity,
                         unitPrice: cartItem.unitPrice,
-                        totalPrice: cartItem.totalPrice,
-                    },
+                        totalPrice: cartItem.totalPrice as any,
+                    } as any,
                 });
             }
 

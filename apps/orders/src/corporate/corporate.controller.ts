@@ -79,7 +79,7 @@ export class CorporateController {
     @Get("accounts/:id/orders")
     getCorporateOrders(
         @Param("id") accountId: string,
-        @Query("status") status?: string,
+        @Query("status") status: string | undefined,
         @Query("page", new DefaultValuePipe(1), ParseIntPipe) page: number,
         @Query("pageSize", new DefaultValuePipe(20), ParseIntPipe) pageSize: number,
     ) {

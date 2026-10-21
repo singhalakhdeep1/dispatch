@@ -694,7 +694,7 @@ model Favorite {
 model OrderHistory {
   id         String   @id @default(cuid())
   userId     String
-  orderId    String
+  orderId    String   @unique
   orderAt    DateTime @default(now())
   reorderCount Int    @default(0)
 

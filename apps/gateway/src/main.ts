@@ -3,8 +3,10 @@ import { NestFactory } from "@nestjs/core";
 import { VersioningType } from "@nestjs/common";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import helmet from "helmet";
-import * as compression from "compression";
-import * as cookieParser from "cookie-parser";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const compression = require("compression");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const cookieParser = require("cookie-parser");
 import { AppModule } from "./app.module";
 
 async function bootstrap() {

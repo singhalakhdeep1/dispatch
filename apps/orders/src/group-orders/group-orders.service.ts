@@ -273,7 +273,7 @@ export class GroupOrdersService {
         return {
             groupOrderId: id,
             participants,
-            totalAmount: participants.reduce((sum, p) => sum + p.amount, 0),
+            totalAmount: participants.reduce((sum: number, p: any) => sum + p.amount, 0),
             participantCount: participants.length,
         };
     }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Headers, Query, DefaultValuePipe, ParseIntPipe, UseGuards } from "@nestjs/common";
+﻿import { Controller, Get, Post, Patch, Delete, Body, Param, Headers, Query, DefaultValuePipe, ParseIntPipe, UseGuards } from "@nestjs/common";
 import { ReviewsService } from "./reviews.service";
 import { ReviewTarget } from "@orderhub/database";
 import { CreateReviewSchema, OwnerReplySchema } from "@orderhub/shared";
@@ -59,8 +59,8 @@ export class ReviewsController {
     ) {
         return this.service.create(userId, {
             ...dto,
-            targetType: dto.targetType as ReviewTarget,
-        });
+            targetType: (dto as any).targetType as ReviewTarget,
+        } as any);
     }
 
     @Patch(":reviewId/reply")
@@ -69,7 +69,7 @@ export class ReviewsController {
         @Headers("x-user-id") userId: string,
         @Body(new ZodValidationPipe(OwnerReplySchema)) dto: z.infer<typeof OwnerReplySchema>,
     ) {
-        return this.service.ownerReply(reviewId, userId, dto.reply);
+        return this.service.ownerReply(reviewId, userId, (dto as any).reply);
     }
 
     @Post(":reviewId/helpful")
@@ -102,7 +102,7 @@ export class ReviewsController {
         @Headers("x-user-id") userId: string,
         @Body() dto: { rating?: number; comment?: string; images?: string[] },
     ) {
-        return this.service.updateReview(reviewId, userId, dto);
+        return this.service.updateReview(reviewId, userId, (dto as any));
     }
 
     @Delete(":reviewId")

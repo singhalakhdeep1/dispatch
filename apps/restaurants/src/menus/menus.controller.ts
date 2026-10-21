@@ -1,4 +1,4 @@
-import {
+﻿import {
     Controller,
     Get,
     Post,
@@ -35,7 +35,7 @@ export class MenusController {
         @Headers("x-user-id") userId: string,
         @Body(new ZodValidationPipe(CreateMenuItemSchema)) dto: z.infer<typeof CreateMenuItemSchema>,
     ) {
-        return this.service.create(restaurantId, userId, dto);
+        return this.service.create(restaurantId, userId, (dto as any));
     }
 
     @Patch("bulk-availability")
@@ -53,7 +53,7 @@ export class MenusController {
         @Headers("x-user-id") userId: string,
         @Body(new ZodValidationPipe(UpdateMenuItemSchema)) dto: z.infer<typeof UpdateMenuItemSchema>,
     ) {
-        return this.service.update(itemId, userId, dto);
+        return this.service.update(itemId, userId, (dto as any));
     }
 
     @Delete(":itemId")

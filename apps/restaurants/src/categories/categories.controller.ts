@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Headers, HttpCode, HttpStatus } from "@nestjs/common";
+﻿import { Controller, Get, Post, Patch, Delete, Body, Param, Headers, HttpCode, HttpStatus } from "@nestjs/common";
 import { CategoriesService } from "./categories.service";
 import { CreateCategorySchema, UpdateCategorySchema } from "@orderhub/shared";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
@@ -19,7 +19,7 @@ export class CategoriesController {
         @Headers("x-user-id") userId: string,
         @Body(new ZodValidationPipe(CreateCategorySchema)) dto: z.infer<typeof CreateCategorySchema>,
     ) {
-        return this.service.create(restaurantId, userId, dto);
+        return this.service.create(restaurantId, userId, (dto as any));
     }
 
     @Patch(":categoryId")
@@ -28,7 +28,7 @@ export class CategoriesController {
         @Headers("x-user-id") userId: string,
         @Body(new ZodValidationPipe(UpdateCategorySchema)) dto: z.infer<typeof UpdateCategorySchema>,
     ) {
-        return this.service.update(categoryId, userId, dto);
+        return this.service.update(categoryId, userId, (dto as any));
     }
 
     @Delete(":categoryId")

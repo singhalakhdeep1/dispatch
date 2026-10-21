@@ -19,7 +19,7 @@ export class TrackingGateway implements OnGatewayConnection, OnGatewayDisconnect
     private readonly logger = new Logger(TrackingGateway.name);
 
     @WebSocketServer()
-    server: Server;
+    server!: Server;
 
     handleConnection(client: Socket) {
         this.logger.debug(`Client connected: ${client.id}`);

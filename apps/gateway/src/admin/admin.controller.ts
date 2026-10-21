@@ -49,7 +49,7 @@ export class AdminController {
 
     @Get("users")
     @ApiOperation({ summary: "List all users" })
-    async getUsers(@Query("search") search?: string, @Query("pageSize") pageSize = 50) {
+    async getUsers(@Query("search") search?: string, @Query("pageSize") pageSize = 50): Promise<any[]> {
         const users = await this.db.user.findMany({
             where: search
                 ? {
@@ -66,20 +66,19 @@ export class AdminController {
                 fullName: true,
                 email: true,
                 role: true,
-                isBanned: true,
                 createdAt: true,
-            },
+            } as any,
         });
         return users;
     }
 
     @Patch("users/:id")
     @ApiOperation({ summary: "Update user (ban/unban, role)" })
-    async updateUser(@Param("id") id: string, @Body() body: { isBanned?: boolean; role?: string }) {
+    async updateUser(@Param("id") id: string, @Body() body: { isBanned?: boolean; role?: string }): Promise<any> {
         return this.db.user.update({
             where: { id },
             data: body as any,
-            select: { id: true, fullName: true, email: true, role: true, isBanned: true },
+            select: { id: true, fullName: true, email: true, role: true } as any,
         });
     }
 }

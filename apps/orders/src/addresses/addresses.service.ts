@@ -17,9 +17,9 @@ export class AddressesService {
 
     async create(userId: string, dto: {
         label: string;
-        fullAddress: string;
+        line1: string;
+        line2?: string;
         city: string;
-        state: string;
         pincode: string;
         latitude: number;
         longitude: number;

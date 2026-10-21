@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
-export default auth((req) => {
+
+export default (auth as any)((req: any) => {
     const isLoggedIn = !!req.auth;
     const { pathname } = req.nextUrl;
 

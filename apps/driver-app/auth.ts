@@ -1,8 +1,7 @@
-import NextAuth from "next-auth";
+import NextAuth, { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import axios from "axios";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const config: NextAuthConfig = {
     providers: [
         Credentials({
             credentials: {
@@ -11,10 +10,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             },
             async authorize(credentials) {
                 try {
-                    const { data } = await axios.post(
+                    const res = await fetch(
                         `${process.env.GATEWAY_URL}/api/v1/auth/login`,
-                        { email: credentials.email, password: credentials.password },
+                        {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ email: credentials?.email, password: credentials?.password }),
+                        },
                     );
+                    if (!res.ok) return null;
+                    const data = await res.json();
                     const user = data?.data;
                     if (!user?.accessToken) return null;
                     if (!["DRIVER"].includes(user.role)) return null;
@@ -41,4 +46,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     pages: { signIn: "/login" },
     session: { strategy: "jwt" },
-});
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const { handlers, auth, signIn, signOut } = NextAuth(config) as any;

@@ -1,4 +1,4 @@
-import {
+﻿import {
     Injectable,
     Inject,
     NotFoundException,
@@ -16,9 +16,9 @@ export class OrderHistoryService {
         @Inject(PRISMA_TOKEN) private readonly prisma: PrismaClient,
     ) { }
 
-    // ─── Get user's order history ─────────────────────────────────────────────────
+    // â”€â”€â”€ Get user's order history â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-    async findUserOrderHistory(userId: string, page = 1, pageSize = 20) {
+    async findUserOrderHistory(userId: string, page = 1, pageSize = 20): Promise<any> {
         const skip = (page - 1) * pageSize;
 
         const [history, total] = await Promise.all([
@@ -66,7 +66,7 @@ export class OrderHistoryService {
         };
     }
 
-    // ─── Reorder from history ─────────────────────────────────────────────────────
+    // â”€â”€â”€ Reorder from history â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async reorder(orderId: string, userId: string) {
         const history = await this.prisma.orderHistory.findFirst({
@@ -148,7 +148,7 @@ export class OrderHistoryService {
         };
     }
 
-    // ─── Find frequently ordered items ─────────────────────────────────────────────
+    // â”€â”€â”€ Find frequently ordered items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async findFrequentOrders(userId: string, limit = 5) {
         const history = await this.prisma.orderHistory.findMany({

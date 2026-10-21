@@ -25,7 +25,7 @@ export class NotificationsController {
         @Headers("x-user-id") userId: string,
         @Query("page", new DefaultValuePipe(1), ParseIntPipe) page: number,
         @Query("pageSize", new DefaultValuePipe(20), ParseIntPipe) pageSize: number,
-    ) {
+    ): Promise<any> {
         if (!userId) throw new UnauthorizedException("Missing X-User-Id header");
         return this.notificationsService.getForUser(userId, page, Math.min(pageSize, 100));
     }

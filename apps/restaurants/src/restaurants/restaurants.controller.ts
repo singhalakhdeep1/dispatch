@@ -1,4 +1,4 @@
-import {
+﻿import {
     Controller,
     Get,
     Post,
@@ -29,7 +29,7 @@ import { z } from "zod";
 export class RestaurantsController {
     constructor(private readonly service: RestaurantsService) { }
 
-    // GET /v1/restaurants — public listing
+    // GET /v1/restaurants â€” public listing
     @Get()
     findAll(
         @Query("page", new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -57,48 +57,48 @@ export class RestaurantsController {
         });
     }
 
-    // GET /v1/restaurants/mine — owner's restaurants
+    // GET /v1/restaurants/mine â€” owner's restaurants
     @Get("mine")
     findMine(@Headers("x-user-id") userId: string) {
         return this.service.findMine(userId);
     }
 
-    // GET /v1/restaurants/:id — single restaurant with menu
+    // GET /v1/restaurants/:id â€” single restaurant with menu
     @Get(":id")
     findOne(@Param("id") id: string) {
         return this.service.findOne(id);
     }
 
-    // POST /v1/restaurants — restaurant owner creates
+    // POST /v1/restaurants â€” restaurant owner creates
     @Post()
     create(
         @Headers("x-user-id") userId: string,
         @Body(new ZodValidationPipe(CreateRestaurantSchema)) dto: z.infer<typeof CreateRestaurantSchema>,
     ) {
-        return this.service.create(userId, dto);
+        return this.service.create(userId, (dto as any));
     }
 
-    // PATCH /v1/restaurants/:id — restaurant owner updates
+    // PATCH /v1/restaurants/:id â€” restaurant owner updates
     @Patch(":id")
     update(
         @Param("id") id: string,
         @Headers("x-user-id") userId: string,
         @Body(new ZodValidationPipe(UpdateRestaurantSchema)) dto: z.infer<typeof UpdateRestaurantSchema>,
     ) {
-        return this.service.update(id, userId, dto);
+        return this.service.update(id, userId, (dto as any));
     }
 
-    // PATCH /v1/restaurants/:id/status — admin only
+    // PATCH /v1/restaurants/:id/status â€” admin only
     @Patch(":id/status")
     updateStatus(
         @Param("id") id: string,
         @Headers("x-user-id") adminId: string,
         @Body(new ZodValidationPipe(UpdateRestaurantStatusSchema)) dto: z.infer<typeof UpdateRestaurantStatusSchema>,
     ) {
-        return this.service.updateStatus(id, dto.status as RestaurantStatus, adminId);
+        return this.service.updateStatus(id, (dto as any).status as RestaurantStatus, adminId);
     }
 
-    // PATCH /v1/restaurants/:id/toggle — owner toggles open/closed
+    // PATCH /v1/restaurants/:id/toggle â€” owner toggles open/closed
     @Patch(":id/toggle")
     toggleOpen(
         @Param("id") id: string,

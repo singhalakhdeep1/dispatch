@@ -21,15 +21,14 @@ export class NotificationsService {
         private readonly gateway: TrackingGateway,
     ) { }
 
-    async create(dto: CreateNotificationDto) {
+    async create(dto: CreateNotificationDto): Promise<any> {
         const notification = await this.prisma.notification.create({
             data: {
                 userId: dto.userId,
                 type: dto.type,
                 title: dto.title,
                 body: dto.body,
-                data: dto.data as any ?? {},
-                orderId: dto.orderId,
+                data: (dto.data as any) ?? {},
             },
         });
 
@@ -47,7 +46,7 @@ export class NotificationsService {
         return notification;
     }
 
-    async getForUser(userId: string, page = 1, pageSize = 20) {
+    async getForUser(userId: string, page = 1, pageSize = 20): Promise<any> {
         const skip = (page - 1) * pageSize;
         const [data, total] = await Promise.all([
             this.prisma.notification.findMany({
@@ -71,18 +70,18 @@ export class NotificationsService {
     async markRead(userId: string, notificationId: string) {
         return this.prisma.notification.updateMany({
             where: { id: notificationId, userId },
-            data: { readAt: new Date() },
+            data: { isRead: true },
         });
     }
 
     async markAllRead(userId: string) {
         return this.prisma.notification.updateMany({
-            where: { userId, readAt: null },
-            data: { readAt: new Date() },
+            where: { userId, isRead: false },
+            data: { isRead: true },
         });
     }
 
     async getUnreadCount(userId: string) {
-        return this.prisma.notification.count({ where: { userId, readAt: null } });
+        return this.prisma.notification.count({ where: { userId, isRead: false } });
     }
 }

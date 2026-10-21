@@ -1,4 +1,4 @@
-import {
+﻿import {
     Injectable,
     Inject,
     NotFoundException,
@@ -11,7 +11,7 @@ import { Redis } from "ioredis";
 import { PRISMA_TOKEN } from "../database/database.module";
 import { REDIS_TOKEN } from "../redis/redis.module";
 import { KafkaService } from "../kafka/kafka.service";
-import { KafkaTopic } from "@orderhub/shared";
+import { KAFKA_TOPICS } from "@orderhub/shared";
 
 const RESTAURANT_CACHE_TTL = 300; // 5 minutes
 
@@ -100,7 +100,7 @@ export class RestaurantsService {
                 take: pageSize,
                 orderBy: sortBy === "rating" ? { rating: "desc" } : { createdAt: "desc" },
                 include: {
-                    owner: { select: { id: true, name: true } },
+                    owner: { select: { id: true, fullName: true } },
                     _count: { select: { menuItems: true, reviews: true } },
                 },
             }),
@@ -123,10 +123,10 @@ export class RestaurantsService {
         const cached = await this.redis.get(cacheKey);
         if (cached) return JSON.parse(cached);
 
-        const restaurant = await this.prisma.restaurant.findUnique({
+        const restaurant = await (this.prisma.restaurant as any).findUnique({
             where: { id },
             include: {
-                owner: { select: { id: true, name: true, phone: true } },
+                owner: { select: { id: true, fullName: true, phone: true } },
                 categories: {
                     where: { isActive: true },
                     orderBy: { sortOrder: "asc" },
@@ -140,7 +140,7 @@ export class RestaurantsService {
                 reviews: {
                     take: 10,
                     orderBy: { createdAt: "desc" },
-                    include: { user: { select: { id: true, name: true, avatar: true } } },
+                    include: { user: { select: { id: true, fullName: true } } },
                 },
                 _count: { select: { reviews: true } },
             },
@@ -191,7 +191,7 @@ export class RestaurantsService {
                 ...dto,
                 ownerId,
                 status: RestaurantStatus.PENDING_APPROVAL,
-            },
+            } as any,
         });
 
         this.logger.log(`Restaurant created: ${restaurant.id} by owner ${ownerId}`);
@@ -224,7 +224,7 @@ export class RestaurantsService {
         fssaiLicense: string;
     }>) {
         await this.assertOwner(id, ownerId);
-        const restaurant = await this.prisma.restaurant.update({ where: { id }, data: dto });
+        const restaurant = await this.prisma.restaurant.update({ where: { id }, data: dto as any });
         await this.redis.del(`restaurant:${id}`);
         return restaurant;
     }
@@ -240,7 +240,7 @@ export class RestaurantsService {
         await this.redis.del(`restaurant:${id}`);
 
         if (status === RestaurantStatus.OPEN) {
-            await this.kafka.emit(KafkaTopic.RESTAURANT_APPROVED, {
+            await this.kafka.emit(KAFKA_TOPICS.RESTAURANT_APPROVED, {
                 restaurantId: id,
                 ownerId: restaurant.ownerId,
                 restaurantName: restaurant.name,

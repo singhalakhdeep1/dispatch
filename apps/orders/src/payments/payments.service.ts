@@ -1,4 +1,4 @@
-import {
+﻿import {
     Injectable,
     Inject,
     NotFoundException,
@@ -9,7 +9,7 @@ import { ConfigService } from "@nestjs/config";
 import { PrismaClient, PaymentStatus, PaymentMethod, OrderStatus } from "@orderhub/database";
 import { PRISMA_TOKEN } from "../database/database.module";
 import { KafkaService } from "../kafka/kafka.service";
-import { KafkaTopic } from "@orderhub/shared";
+import { KAFKA_TOPICS } from "@orderhub/shared";
 import * as crypto from "crypto";
 import Razorpay from "razorpay";
 
@@ -29,14 +29,14 @@ export class PaymentsService {
         });
     }
 
-    // ─── Initiate payment ─────────────────────────────────────────────────────
+    // â”€â”€â”€ Initiate payment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async initiate(orderId: string, userId: string, method: PaymentMethod) {
         const order = await this.prisma.order.findUnique({ where: { id: orderId } });
         if (!order) throw new NotFoundException("Order not found");
         if (order.userId !== userId) throw new BadRequestException("Not your order");
 
-        // For COD — no Razorpay needed
+        // For COD â€” no Razorpay needed
         if (method === PaymentMethod.CASH_ON_DELIVERY) {
             const payment = await this.prisma.payment.create({
                 data: {
@@ -84,7 +84,7 @@ export class PaymentsService {
         };
     }
 
-    // ─── Verify payment ───────────────────────────────────────────────────────
+    // â”€â”€â”€ Verify payment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async verify(dto: {
         razorpayOrderId: string;
@@ -115,7 +115,7 @@ export class PaymentsService {
             },
         });
 
-        await this.kafka.emit(KafkaTopic.PAYMENT_SUCCESS, {
+        await this.kafka.emit(KAFKA_TOPICS.PAYMENT_SUCCESS, {
             orderId: payment.orderId,
             userId: payment.userId,
             amount: payment.amount,
@@ -126,7 +126,7 @@ export class PaymentsService {
         return updated;
     }
 
-    // ─── Razorpay webhook ─────────────────────────────────────────────────────
+    // â”€â”€â”€ Razorpay webhook â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async handleWebhook(body: string, signature: string) {
         const webhookSecret = this.config.get<string>("app.razorpay.webhookSecret")!;
@@ -148,7 +148,7 @@ export class PaymentsService {
                         where: { id: payment.id },
                         data: { status: PaymentStatus.FAILED, failureReason: event.payload?.payment?.entity?.error_description },
                     });
-                    await this.kafka.emit(KafkaTopic.PAYMENT_FAILED, {
+                    await this.kafka.emit(KAFKA_TOPICS.PAYMENT_FAILED, {
                         orderId: payment.orderId,
                         userId: payment.userId,
                         reason: event.payload?.payment?.entity?.error_description,
@@ -160,7 +160,7 @@ export class PaymentsService {
         return { received: true };
     }
 
-    // ─── Refund ───────────────────────────────────────────────────────────────
+    // â”€â”€â”€ Refund â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async refund(orderId: string, reason?: string) {
         const payment = await this.prisma.payment.findUnique({ where: { orderId } });
@@ -187,7 +187,7 @@ export class PaymentsService {
             },
         });
 
-        await this.kafka.emit(KafkaTopic.PAYMENT_REFUNDED, {
+        await this.kafka.emit(KAFKA_TOPICS.PAYMENT_REFUNDED, {
             orderId,
             userId: payment.userId,
             amount: payment.amount,
@@ -198,7 +198,7 @@ export class PaymentsService {
         return updated;
     }
 
-    // ─── Wallet ───────────────────────────────────────────────────────────────
+    // â”€â”€â”€ Wallet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async getWallet(userId: string) {
         return this.prisma.wallet.upsert({
