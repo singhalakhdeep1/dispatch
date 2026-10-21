@@ -8,9 +8,9 @@ export class FavoritesController {
     @Get()
     findMyFavorites(
         @Headers("x-user-id") userId: string,
-        @Query("type") type?: string, // 'restaurant' or 'item'
         @Query("page", new DefaultValuePipe(1), ParseIntPipe) page: number,
         @Query("pageSize", new DefaultValuePipe(20), ParseIntPipe) pageSize: number,
+        @Query("type") type?: string, // 'restaurant' or 'item'
     ) {
         return this.service.findUserFavorites(userId, type, page, pageSize);
     }

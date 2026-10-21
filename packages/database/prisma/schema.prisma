@@ -48,6 +48,8 @@ model User {
   groupOrdersPart  GroupOrderParticipant[]
   giftCardsSent    GiftCard[]
   giftCardRedemptions GiftCardRedemption[]
+  rewardRedemptions RewardRedemption[]
+  scheduledOrders  ScheduledOrder[]
   corporateEmployee CorporateEmployee[]
 
   @@map("users")
@@ -913,6 +915,7 @@ model GiftCardRedemption {
 
   giftCard GiftCard @relation(fields: [giftCardId], references: [id])
   user     User     @relation(fields: [userId], references: [id])
+  order    Order    @relation(fields: [orderId], references: [id])
 
   @@unique([giftCardId, orderId])
   @@index([giftCardId])
